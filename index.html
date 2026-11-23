@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>青思汇｜思政AIGC作品共创平台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{max-width:640px;margin:12px auto;padding:0 12px;}
+.box{border:1px solid #ddd;padding:16px;border-radius:10px;margin-bottom:16px;}
+input,textarea,select{width:100%;padding:8px;margin:6px 0;border:1px solid #ccc;border-radius:6px;}
+button{background:#2563eb;color:white;padding:10px 14px;border:none;border-radius:6px;cursor:pointer;margin-top:8px;}
+a{display:inline-block;margin:8px 0;color:#2563eb;text-decoration:none;}
+</style>
+</head>
+<body>
+<h2>青思汇｜思政AIGC作品共创平台</h2>
+<div class="box">
+    <h3>📝提交你的思政作品</h3>
+    <form id="workForm">
+        <label>作品标题</label>
+        <input type="text" name="title" required placeholder="输入作品标题">
+
+        <label>作者姓名</label>
+        <input type="text" name="author" required placeholder="你的姓名">
+
+        <label>学号</label>
+        <input type="text" name="student_id" required placeholder="填写学号">
+
+        <label>专题标签</label>
+        <select name="subject_tag">
+            <option value="十五五青年说">十五五青年说</option>
+            <option value="传承红色基因">传承红色基因</option>
+            <option value="其他">其他</option>
+        </select>
+
+        <label>作品简介</label>
+        <textarea name="work_desc" rows="4" placeholder="简单介绍你的作品"></textarea>
+
+        <label>上传海报图片</label>
+        <input type="file" accept="image/*" id="fileInput">
+
+        <button type="submit">提交投稿（等待管理员审核）</button>
+    </form>
+    <div id="msg"></div>
+    <br>
+    <a href="gallery.html">👉前往数字展厅浏览已审核作品</a>
+</div>
+
+<script>
+// =========这里替换成你Supabase的信息============
+const SUPABASE_URL = "sb_publishable_AE4XgynNTlOsxcjLms97VQ_sRSOS2w3
+";
+const SUPABASE_ANON_KEY = "sb_secret_zgnotcBnfGFOL52RY4lw9A_2XxF7i-A";
+// ==============================================
+const { createClient } = supabase;
+const supabase = createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const form = document.querySelector("#workForm");
+const fileInput = document.querySelector("#fileInput");
+const msgDom = document.querySelector("#msg");
+
+form.addEventListener("submit",async (e)=>{
+    e.preventDefault();
+    msgDom.innerText = "正在提交，请稍候...";
+    let imgUrl = "";
+    const file = fileInput.files[0];
+    if(file){
+        const filename = Date.now()+"-"+file.name;
+        const {data:upData,error:upErr} = await supabase.storage.from("qingsihui_upload").upload(filename,file);
+        if(upErr){
+            msgDom.innerText = "图片上传失败："+upErr.message;
+            return;
+        }
+        const {data:{publicUrl}} = supabase.storage.from("qingsihui_upload").getPublicUrl(filename);
+        imgUrl = publicUrl;
+    }
+    const fd = new FormData(form);
+    const payload = {
+        title:fd.get("title"),
+        author:fd.get("author"),
+        student_id:fd.get("student_id"),
+        subject_tag:fd.get("subject_tag"),
+        work_desc:fd.get("work_desc"),
+        work_file:imgUrl,
+        status:0
+    }
+    const {error} = await supabase.from("works").insert([payload]);
+    if(error){
+        msgDom.innerText="投稿失败："+error.message;
+    }else{
+        msgDom.innerText="✅投稿成功，请等待管理员审核！";
+        form.reset();
+    }
+})
+</script>
+</body>
+</html>

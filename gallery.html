@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>青思汇｜数字展厅</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{max-width:640px;margin:12px auto;padding:0 12px;}
+.card{border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:14px;}
+img{max-width:100%;border-radius:6px;}
+a{color:#2563eb;text-decoration:none;}
+</style>
+</head>
+<body>
+<h2>🎨青思汇 · 数字作品展厅</h2>
+<p><a href="index.html">←返回投稿页面</a></p>
+<div id="listWrap">加载中...</div>
+
+<script>
+// =========这里替换成你Supabase的信息============
+const SUPABASE_URL = "sb_publishable_AE4XgynNTlOsxcjLms97VQ_sRSOS2w3
+";
+const SUPABASE_ANON_KEY = "sb_secret_zgnotcBnfGFOL52RY4lw9A_2XxF7i-A";
+// ==============================================
+const { createClient } = supabase;
+const supabase = createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+async function loadWorks(){
+    const {data,error}= await supabase.from("works").select("*").eq("status",1).order("create_time",{asc:false});
+    const wrap = document.querySelector("#listWrap");
+    if(error||data.length===0){
+        wrap.innerHTML="<p>暂无已审核通过的作品，敬请期待。</p>";
+        return;
+    }
+    let html = "";
+    data.forEach(item=>{
+        html += `<div class="card">
+            <h3>${item.title}</h3>
+            <div>作者：${item.author}｜分类：${item.subject_tag}</div>
+            <p>${item.work_desc||""}</p>
+            ${item.work_file?`<img src="${item.work_file}">`:""}
+        </div>`
+    })
+    wrap.innerHTML = html;
+}
+loadWorks();
+</script>
+</body>
+</html>
