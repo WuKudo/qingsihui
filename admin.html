@@ -67,10 +67,10 @@ let supabase = null;
 
 // ---------- 密码锁 ----------
 function unlock(){
-  const v = document.getElementById("pwd").value.trim();
   const err = document.getElementById("lockErr");
-  if(v === ADMIN_PASSWORD){
-    sessionStorage.setItem("qs_admin_auth","1");
+  let v = "";
+  try{ v = document.getElementById("pwd").value.trim(); }catch(e){}
+  if(v.toLowerCase() === ADMIN_PASSWORD.toLowerCase()){
     enterApp();
   }else{
     err.textContent = "密码不正确，请重试";
@@ -160,10 +160,7 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
 }
 
-// 已通过密码校验的，刷新后直接进入
-if(sessionStorage.getItem("qs_admin_auth") === "1"){
-  enterApp();
-}
+// 刷新页面后需重新输入密码
 </script>
 </body>
 </html>
