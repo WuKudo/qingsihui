@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作品审核后台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{max-width:800px;margin:20px auto;padding:0 12px;}
+.item{border:1px solid #ddd;padding:16px;border-radius:10px;margin-bottom:12px;}
+img{max-width:100%;border-radius:6px;}
+button{padding:6px 12px;margin:4px;border:none;border-radius:4px;cursor:pointer;}
+.pass{background:#22c55e;color:white;}
+.reject{background:#ef4444;color:white;}
+</style>
+</head>
+<body>
+<h2>📋 待审核作品后台</h2>
+<div id="list"></div>
+
+<script>
+// =========这里改你的Supabase信息=========
+const SUPABASE_URL = "sb_publishable_AE4XgynNTlOsxcjLms97VQ_sRSOS2w3
+";
+const SUPABASE_ANON_KEY = "sb_secret_zgnotcBnfGFOL52RY4lw9A_2XxF7i-A";
+// ========================================
+const { createClient } = supabase;
+const supabase = createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+async function loadList(){
+    const {data,error}=await supabase.from("works").select("*").order("create_time",{asc:false});
+    const wrap = document.querySelector("#list");
+    if(error) {wrap.innerText="加载失败："+error.message;return;}
+    let html = "";
+    data.forEach(item=>{
+        let statusText = item.status===0?"🔴待审核":item.status===1?"🟢已通过":"⚫已驳回";
+        html += `<div class="item">
+            <h3>${item.title} ${statusText}</h3>
+            <div>作者：${item.author}｜学号：${item.student_id}｜分类：${item.subject_tag}</div>
+            <p>${item.work_desc||""}</p>
+            ${item.work_file?`<img src="${item.work_file}">`:""}
+            <div>
+                <button class="pass" onclick="updateStatus('${item.id}',1)">通过</button>
+                <button class="reject" onclick="updateStatus('${item.id}',2)">驳回</button>
+            </div>
+        </div>`
+    })
+    wrap.innerHTML = html;
+}
+window.updateStatus = async function(id,val){
+    await supabase.from("works").update({status:val}).eq("id",id);
+    loadList();
+}
+loadList();
+</script>
+</body>
+</html>
